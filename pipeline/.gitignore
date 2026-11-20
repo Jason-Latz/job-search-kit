@@ -1,0 +1,10 @@
+# Per-run artifacts and local logs.
+out/
+logs/
+__pycache__/
+*.pyc
+
+# The SQLite file itself: a daily-changing binary makes for useless git history.
+# state/tracker-export.json is the committed, diffable snapshot it rebuilds from.
+state/jobs.db
+state/jobs.db-journal

@@ -1,0 +1,89 @@
+% resume.sty: the shared look of every resume variant.
+% Change formatting here and every variant follows. Content lives in content/ and variants/.
+% Measurements match a common Google Docs single-column resume.
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{resume}
+
+\RequirePackage[letterpaper, left=0.75in, right=0.75in, top=0.463in, bottom=0.5in]{geometry}
+\RequirePackage{fontspec}
+\RequirePackage{xcolor}
+\RequirePackage{enumitem}
+\RequirePackage[hidelinks]{hyperref}
+
+% Fonts: Times New Roman for text, Arial for the bullet and separator glyphs (as in the original).
+% WordSpace: spaces never shrink, so lines wrap where Google Docs wraps them.
+% Off macOS (no Times New Roman / Arial), fall back to the metric-compatible TeX Gyre clones.
+\IfFontExistsTF{Times New Roman}
+  {\setmainfont{Times New Roman}[WordSpace={1,1,0}]\newfontfamily\glyphfont{Arial}}
+  {\setmainfont{texgyretermes}[Extension=.otf, UprightFont=*-regular, BoldFont=*-bold,
+     ItalicFont=*-italic, BoldItalicFont=*-bolditalic, WordSpace={1,1,0}]
+   \newfontfamily\glyphfont{DejaVuSans.ttf}[Scale=0.75]}
+\definecolor{linkblue}{HTML}{1155CC}
+
+\hypersetup{pdftitle={Resume}}
+\pagestyle{empty}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0pt}
+\raggedright
+\hyphenpenalty=10000 % Google Docs never hyphenates; neither do we.
+\exhyphenpenalty=10000
+
+% 11pt text on a 12.7pt line, the pitch Google Docs uses for Times at single spacing.
+\renewcommand{\normalsize}{\fontsize{11}{12.7}\selectfont}
+\normalsize
+
+% Vertical rhythm.
+\newlength{\entryskip}\setlength{\entryskip}{9.35pt}   % blank space between entries
+\newlength{\sectionskip}\setlength{\sectionskip}{8.9pt} % blank space above a section heading
+
+\newif\ifresume@firstentry
+
+% --- Header -----------------------------------------------------------------
+% \name{Your Name}
+\newcommand{\name}[1]{{\centering\fontsize{16}{18}\selectfont\textbf{#1}\par}\vspace{3.7pt}}
+% \contact{item \sep item \sep ...}
+\newcommand{\contact}[1]{{\centering #1\par}\vspace{0.5pt}}
+\newcommand{\sep}{\unskip\ \ {\glyphfont\textperiodcentered}\ \ \ignorespaces}
+% \weblink{url}{shown text}: blue underlined link, as in the original.
+% The underline sits just under the baseline, as Google Docs draws it (\underline goes below descenders).
+\newcommand{\weblink}[2]{\href{#1}{\textcolor{linkblue}{\resume@underline{#2}}}}
+\newcommand{\resume@underline}[1]{\setbox0\hbox{#1}\rlap{\rule[-1.9pt]{\wd0}{0.8pt}}\box0}
+
+% --- Sections ---------------------------------------------------------------
+% \section{Experience}: bold capitals with a full-width rule underneath. A star is ignored.
+\RenewDocumentCommand{\section}{s m}{%
+  \par\vspace{\sectionskip}%
+  \smash{\rlap{\raisebox{-3.8pt}{\rule{\linewidth}{1pt}}}}% rule sits under the heading's baseline
+  \textbf{\MakeUppercase{#2}}\par\vspace{0.75pt}%
+  \global\resume@firstentrytrue}
+
+\newcommand{\resume@startentry}{%
+  \par\ifresume@firstentry\global\resume@firstentryfalse\else\vspace{\entryskip}\fi}
+
+% --- Entries ----------------------------------------------------------------
+% Each header line is a box exactly one line wide, so text too long for the line fails the
+% build (Overfull \hbox) instead of silently wrapping.
+\newcommand{\resume@row}[2]{\hbox to\linewidth{#1\hfil #2}}
+
+% \entry{Organization}{Location}{Title}{Dates}
+%   Organization (bold) ........................ Location
+%   Title (italic) ............................. Dates (italic)
+\newcommand{\entry}[4]{%
+  \resume@startentry
+  \resume@row{\textbf{#1}}{#2}
+  \resume@row{\textit{#3}}{\textit{#4}}}
+
+% \project{Name}{Dates}: one line, name bold. Use \weblink inside Name for a link.
+\newcommand{\project}[2]{%
+  \resume@startentry
+  \resume@row{\textbf{#1}}{\textit{#2}}}
+
+% \activity{Text}{Dates}: a plain single line, for activities and similar lists.
+\newcommand{\activity}[2]{\par\resume@row{#1}{\textit{#2}}}
+
+% \begin{bullets} \item ... \end{bullets}
+% rightmargin=1.5pt makes bullet text wrap at the same words Google Docs wrapped it.
+\newlist{bullets}{itemize}{1}
+\setlist[bullets]{label={\glyphfont\char"25CF}, leftmargin=36pt, labelindent=18pt,
+  labelwidth=18pt, labelsep=0pt, rightmargin=1.5pt, align=left, topsep=0pt, partopsep=0pt,
+  itemsep=0pt, parsep=0pt}
